@@ -5,12 +5,15 @@
  */
 package videclub;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -20,6 +23,8 @@ import javax.swing.table.DefaultTableModel;
  */
 public class Login extends javax.swing.JFrame {
 
+    int a =0;
+    
     private User usuario;
     
     public Login() {
@@ -140,27 +145,33 @@ public class Login extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCancelMousePressed
 
     private void btnAceptarMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnAceptarMousePressed
-        buscar(tfName.getText(),tfPassword.getText());
+        try {
+            buscar(tfName.getText(),tfPassword.getText());
+            this.setVisible(false);
+        } catch (IOException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_btnAceptarMousePressed
 
-    private void buscar(String nom, String pass) {
+    private void buscar(String nom, String pass) throws IOException {
        try {
-           Class.forName("org.sqlite.JDBC");
+            Class.forName("com.mysql.jdbc.Driver");
             
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:AplicacionRegistro.sqlite"); 
+            Connection conn = DriverManager.getConnection("jdbc:mysql://172.16.0.187/videoclub","root","1234"); 
             
             Statement stat = conn.createStatement();
             
-            ResultSet rst = stat.executeQuery("SELECT * FROM Videoclub WHERE Nombre='" + nom + "' AND DNI = '" + pass + "'");
+            ResultSet rst = stat.executeQuery("SELECT * FROM videoclub.usuarios WHERE Nombre='" + nom + "' AND DNI = '" + pass + "'");
             
-            if(rst!=null){
-                usuario = new User();
+            if(rst.next()){
+                usuario = new User(pass);
                 usuario.setVisible(true);
             }else{
                 lblError.setVisible(true);
                 tfName.setText("");
-                tfName.setText("");
+                tfPassword.setText("");
             }
+            
             
             /*ResultSetMetaData rstMd = rst.getMetaData();
             

@@ -5,10 +5,20 @@
  */
 package videclub;
 
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 /**
  *
@@ -19,12 +29,110 @@ public class User extends javax.swing.JFrame {
     /**
      * Creates new form User
      */
-    public User() throws IOException {
+    
+    Connection conn;
+    Statement stat;
+    ResultSet rstName;
+    ResultSet rstApellido;
+    ResultSet rst;
+    ResultSet rstFilm;
+    
+    String [][] arrayResultado;
+    
+    String [][] arrayPeliculas;
+    String [] arrayCaratulas;
+    
+    int x;
+    
+    String z;
+    
+    public User(String dni) throws IOException, ClassNotFoundException, SQLException {
         initComponents();
-        BufferedImage myPicture = ImageIO.read(new File("path-to-file"));
-        JLabel picLabel = new JLabel(new ImageIcon(myPicture));
-        add(picLabel);
+        String path = "/imagenes/"+dni+".jpg";
+        URL imagen1 = getClass().getResource(path);
+        ImageIcon foto = new ImageIcon(new ImageIcon(imagen1).getImage().getScaledInstance(lblPic.getHeight(), lblPic.getWidth(), Image.SCALE_DEFAULT));
+        conectar(dni);
+        lblNombre.setText(arrayResultado[rst.getRow()-1][0]);
+        lblApellido.setText(arrayResultado[rst.getRow()-1][1]);
+        lblPic.setIcon(foto);
+        
+        
+        
+        for(x =1; x<3;x++){
+            int a =0;
+            System.out.println("init"+ruta(x));
+            URL imagen2 = getClass().getResource(ruta(x));
+            ImageIcon portada = new ImageIcon(imagen2);
+            peli1.setBounds(peli1.getX(),peli1.getY(),peli1.getWidth(),peli1.getHeight());
+            a++;
+            if(a==1){
+                peli1.setIcon(portada);
+            }else if(a==2){
+                peli2.setIcon(portada);
+            }else if(a==3){
+                peli3.setIcon(portada);
+            }
+        }
 
+    }
+    
+    private void conectar(String dni) throws ClassNotFoundException, SQLException{
+        Class.forName("com.mysql.jdbc.Driver");
+            
+        conn = DriverManager.getConnection("jdbc:mysql://172.16.0.187/videoclub","root","1234"); 
+
+        stat = conn.createStatement();
+
+        rst = stat.executeQuery("SELECT * FROM videoclub.usuarios WHERE DNI='" + dni + "'");
+        rst.last();
+        arrayResultado = new String[rst.getRow()][3];
+        rst.first();
+        arrayResultado[rst.getRow()-1][0] = rst.getString("Nombre");
+        arrayResultado[rst.getRow()-1][1] = rst.getString("Apellido");
+
+        //---------------------------------------------------------------
+        /*rstFilm = stat.executeQuery("SELECT * FROM videoclub.peliculas WHERE titulo = '" + "polla" + "'");
+        rstFilm.last();
+        arrayPeliculas = new String[rstFilm.getRow()][8];
+        rstFilm.first();
+        arrayPeliculas[rstFilm.getRow()-1][0] = rstFilm.getString("id_pelicula");
+        arrayPeliculas[rstFilm.getRow()-1][1] = rstFilm.getString("titulo");
+        arrayPeliculas[rstFilm.getRow()-1][2] = rstFilm.getString("año");
+        arrayPeliculas[rstFilm.getRow()-1][3] = rstFilm.getString("pais");
+        arrayPeliculas[rstFilm.getRow()-1][4] = rstFilm.getString("genero");
+        arrayPeliculas[rstFilm.getRow()-1][5] = rstFilm.getString("imdb");
+        arrayPeliculas[rstFilm.getRow()-1][6] = rstFilm.getString("clasificacion_imdb");
+        arrayPeliculas[rstFilm.getRow()-1][7] = rstFilm.getString("resumen");*/
+            
+    }
+    
+    /*private void caratulas(String caratula){
+        arrayCaratulas = new String[151];
+        String c = "";
+        int a=0;
+        for(int j=0;j<6;j++){
+            if(caratula.charAt(j)=='0'){
+                a++;
+            }else{
+                c=c+caratula.charAt(j);
+            }
+            URL imagen2 = getClass().getResource(ruta(a,c));
+            ImageIcon portada = new ImageIcon(new ImageIcon(imagen2).getImage().getScaledInstance(peli1.getHeight(), peli1.getWidth(), Image.SCALE_DEFAULT));
+            peli1.setIcon(portada);
+        }
+    }*/
+    
+    private String ruta(int a){
+        String caratula = "";
+        if(a<10){
+            caratula = "/caratula/" + "00000" + a + ".jpg";
+        }else if(a>=10 || a<100){
+            caratula = "/caratula/" + "0000" + a + ".jpg";
+        }else{
+            caratula = "/caratula/" + "000" + a + ".jpg";
+        }
+        System.out.println("ruta"+caratula);
+        return caratula;
     }
 
     /**
@@ -39,6 +147,11 @@ public class User extends javax.swing.JFrame {
         lblPic = new javax.swing.JLabel();
         lblNombre = new javax.swing.JLabel();
         lblApellido = new javax.swing.JLabel();
+        peli1 = new javax.swing.JLabel();
+        peli2 = new javax.swing.JLabel();
+        peli3 = new javax.swing.JLabel();
+        btnNext = new javax.swing.JButton();
+        btnPrev = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -46,18 +159,42 @@ public class User extends javax.swing.JFrame {
 
         lblApellido.setText("Apellido: ");
 
+        btnNext.setText(">");
+        btnNext.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                btnNextMousePressed(evt);
+            }
+        });
+
+        btnPrev.setText("<");
+        btnPrev.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                btnPrevMousePressed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(lblPic, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblPic, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnPrev))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(peli1, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(peli2, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(peli3, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(lblNombre)
                     .addComponent(lblApellido))
-                .addContainerGap(633, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 64, Short.MAX_VALUE)
+                .addComponent(btnNext)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -69,11 +206,66 @@ public class User extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(lblApellido))
                     .addComponent(lblPic, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(380, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(117, 117, 117)
+                        .addComponent(btnPrev, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 46, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(peli1, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(peli2, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(peli3, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(84, 84, 84))))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnNext, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(184, 184, 184))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnNextMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNextMousePressed
+        int a =0;
+        if(x<151){
+            for(x = x; x<x+3;x++){
+                System.out.println("boton(ruta(x)"+ruta(x));
+                URL imagen2 = getClass().getResource(ruta(x));
+                ImageIcon portada = new ImageIcon(imagen2);
+                peli1.setBounds(peli1.getX(),peli1.getY(),peli1.getWidth(),peli1.getHeight());
+                a++;
+                if(a==1){
+                    peli1.setIcon(portada);
+                }else if(a==2){
+                    peli2.setIcon(portada);
+                }else if(a==3){
+                    peli3.setIcon(portada);
+                }
+            }
+        }
+    }//GEN-LAST:event_btnNextMousePressed
+
+    private void btnPrevMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnPrevMousePressed
+        int a =0;
+        if(x>0){
+            for(x = x; x<x-3;x--){
+                System.out.println("boton(ruta(x)"+ruta(x));
+                URL imagen2 = getClass().getResource(ruta(x));
+                ImageIcon portada = new ImageIcon(imagen2);
+                peli1.setBounds(peli1.getX(),peli1.getY(),peli1.getWidth(),peli1.getHeight());
+                a++;
+                if(a==1){
+                    peli1.setIcon(portada);
+                }else if(a==2){
+                    peli2.setIcon(portada);
+                }else if(a==3){
+                    peli3.setIcon(portada);
+                }
+            }
+        }
+    }//GEN-LAST:event_btnPrevMousePressed
 
     /**
      * @param args the command line arguments
@@ -105,14 +297,23 @@ public class User extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new User().setVisible(true);
+                //try {
+                    //new User(String dni).setVisible(true);
+                /*} catch (IOException ex) {
+                    Logger.getLogger(User.class.getName()).log(Level.SEVERE, null, ex);
+                }*/
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnNext;
+    private javax.swing.JButton btnPrev;
     private javax.swing.JLabel lblApellido;
     private javax.swing.JLabel lblNombre;
     private javax.swing.JLabel lblPic;
+    private javax.swing.JLabel peli1;
+    private javax.swing.JLabel peli2;
+    private javax.swing.JLabel peli3;
     // End of variables declaration//GEN-END:variables
 }
